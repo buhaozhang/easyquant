@@ -11,6 +11,5 @@ class DefaultQuotationEngine(BaseEngine):
 
     def init(self):
         self.source = easyquotation.use('sina')
-
     def fetch_quotation(self):
         return self.source.all

@@ -65,6 +65,9 @@ class StrategyTemplate:
     def clock(self, event):
         pass
 
+    def backtest(self, event):
+        pass
+
     def log_handler(self):
         """
         优先使用在此自定义 log 句柄, 否则返回None, 并使用主引擎日志句柄

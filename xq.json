@@ -1,5 +1,5 @@
 {
-  "account": "手机号",
-  "password": "加密后的密码",
-  "portfolio_code": "组合代码(例:ZH818559)"
+  "cookies": "device_id=df73ab9fb4e15f9c9d83d0cdbd9c75fa; s=ck13q3rhfa; bid=83ee17baaadfc39a51a93565296335a0_knhfjb7z; __utmc=1; __utmz=1.1618403329.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); snbim_minify=true; cookiesu=331619402777562; Hm_lvt_1db88642e346389874251b5a1eded6e3=1619402945; xq_a_token=38758f3880956f6d241b1aa8dc1306a89aa2d509; xqat=38758f3880956f6d241b1aa8dc1306a89aa2d509; xq_r_token=4ac6d9bf01da9b6fbdb57a8cd6ee0637593fa203; xq_id_token=eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJ1aWQiOjI1NDU4NTkwOTAsImlzcyI6InVjIiwiZXhwIjoxNjIyMzU2NTUwLCJjdG0iOjE2MTk3NjQ1NTA0MDksImNpZCI6ImQ5ZDBuNEFadXAifQ.h7oUiMyC1IsDM1wf0ejAXCT9DNtJNRn0k10kocAfuurEJLxtWaT7SRwIUwRooYtOrQZ8aXFth2nt0XJk6bpz70gbujvP8Bu5s6E1qBXmVWY5ebwQeIyvspGiK5ux90Kw9-JaCgbBsWy_mFL-xVes4VVympHBj3lhaErRMS1X-Y2Y7bAioQuMMIDSwiwfzPj3lNmrFp5ftYEibuum5Q1iGT4wWkE7MThUWYVW_6c7dH3b-mtJlHOBb9k3vfAC8Ag9kcChZHAyObG-Wk9dk3EmW9h6Y0uPEDFYJfk1YYe2dl568jrIp_B0KHH-F3jpyA88oFLH8dUO_tDyEYhzcXeroA; xq_is_login=1; u=2545859090; acw_tc=2760820316206983085193037e94c8ad355a00e4b0d4373e06d8c2f2a1e9d8; is_overseas=0; __utma=1.1713645654.1618403329.1620647674.1620698402.9; __utmt=1; __utmb=1.2.10.1620698402; Hm_lpvt_1db88642e346389874251b5a1eded6e3=1620698417",
+  "portfolio_code": "ZH2518577",
+  "portfolio_market": "cn"
 }

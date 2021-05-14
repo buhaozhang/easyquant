@@ -80,6 +80,7 @@ class FixedMainEngine(MainEngine):
         """
         for quotation_engine in self.quotation_engines:
             self.event_engine.register(quotation_engine.EventType, strategy.on_event)
+            self.event_engine.register(quotation_engine.BacktestEventType, strategy.on_backtest)
         self.event_engine.register(ClockEngine.EventType, strategy.on_clock)
 
     def unbind_event(self, strategy):
@@ -88,6 +89,7 @@ class FixedMainEngine(MainEngine):
         """
         for quotation_engine in self.quotation_engines:
             self.event_engine.unregister(quotation_engine.EventType, strategy.on_event)
+            self.event_engine.unregister(quotation_engine.BacktestEventType, strategy.on_backtest)
         self.event_engine.unregister(ClockEngine.EventType, strategy.on_clock)
 
     def load_strategy(self, names=None):

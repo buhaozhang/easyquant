@@ -12,9 +12,10 @@ class ProcessWrapper(object):
         """
         self.__strategy = strategy
         # 事件队列
-        self.__event_queue = mp.Queue(10000)
+        self.__event_queue = mp.Queue(10)
         # 时钟队列
-        self.__clock_queue = mp.Queue(10000)
+        self.__clock_queue = mp.Queue(10)
+        self.__backtest_queue = mp.Queue(10)
         # 包装进程
         self.__proc = mp.Process(target=self._process)
         self.__proc.start()
@@ -25,6 +26,7 @@ class ProcessWrapper(object):
         """
         self.__event_queue.put(0)
         self.__clock_queue.put(0)
+        self.__backtest_queue.put(0)
         self.__proc.join()
 
     def on_event(self, event):
@@ -39,6 +41,15 @@ class ProcessWrapper(object):
         推送时钟
         """
         self.__clock_queue.put(event)
+    
+    def shutdown(self):
+        self.__strategy.shutdown()
+
+    def on_backtest(self, event):
+        """
+        推送时钟
+        """
+        self.__backtest_queue.put(event)
 
     def _process_event(self):
         """
@@ -59,14 +70,29 @@ class ProcessWrapper(object):
         处理时间
         """
         while True:
-
             try:
                 event = self.__clock_queue.get(block=True)
                 # 退出
                 if event == 0:
                     break
                 self.__strategy.clock(event)
-            except:
+            except Exception as e:
+                print(e)
+                pass
+
+    def _process_backtest(self):
+        """
+        处理回测
+        """
+        while True:
+            try:
+                event = self.__backtest_queue.get(block=True)
+                # 退出
+                if event == 0:
+                    break
+                self.__strategy.backtest(event)
+            except Exception as e:
+                print(e)
                 pass
 
     def _process(self):
@@ -76,6 +102,8 @@ class ProcessWrapper(object):
         event_thread = Thread(target=self._process_event, name="ProcessWrapper._process_event")
         event_thread.start()
         clock_thread = Thread(target=self._process_clock, name="ProcessWrapper._process_clock")
+        clock_thread.start()
+        clock_thread = Thread(target=self._process_backtest, name="ProcessWrapper._process_clock")
         clock_thread.start()
 
         event_thread.join()
