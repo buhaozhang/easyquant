@@ -172,10 +172,11 @@ class ClockEngine:
             time.sleep(self.sleep_time)
 
     def tock(self):
-        if not etime.is_trade_date(self.now_dt):
-            pass  # 假日暂停时钟引擎
-        else:
-            self._tock()
+        # if not etime.is_trade_date(self.now_dt):
+        #     pass  # 假日暂停时钟引擎
+        # else:
+        #     self._tock()
+        self._tock()
 
     def _tock(self):
         # 间隔事件
@@ -221,8 +222,8 @@ class ClockEngine:
         self.clock_moment_handlers = deque(handlers)
         return handler
 
-    def register_interval(self, interval_minute, trading=True):
-        return self._register_interval(interval_minute, trading)
+    def register_interval(self, interval_minute, trading=True, call=None):
+        return self._register_interval(interval_minute, trading,call)
 
     def _register_interval(self, interval_minute, trading=True, call=None):
         handler = ClockIntervalHandler(self, interval_minute, trading, call)

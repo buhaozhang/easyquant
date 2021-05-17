@@ -15,16 +15,14 @@ import os
 """
 
 
-class Strategy(StrategyTemplate):
+class OpenStrategy(StrategyTemplate):
     name = 'open'
 
     def init(self):
         self.quotation_dict = {}
 
     def strategy(self, event):
-        self.log.info('检查持仓')
-        self.log.info(self.user.balance)
-        self.log.info('\n')
+        pass
 
     def clock(self, event):
         """在交易时间会定时推送 clock 事件

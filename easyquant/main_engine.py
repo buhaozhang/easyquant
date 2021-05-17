@@ -30,7 +30,7 @@ class MainEngine:
     """主引擎，负责行情 / 事件驱动引擎 / 交易"""
 
     def __init__(self, broker=None, need_data=None, quotation_engines=None,
-                 log_handler=DefaultLogHandler(), tzinfo=None):
+                 log_handler=DefaultLogHandler(), tzinfo=None, strategy_list=[]):
         """初始化事件 / 行情 引擎并启动事件引擎
         """
         self.log = log_handler
@@ -65,23 +65,11 @@ class MainEngine:
         for quotation_engine in quotation_engines:
             self.quotation_engines.append(quotation_engine(self.event_engine, self.clock_engine))
 
-        # 保存读取的策略类
-        self.strategies = OrderedDict()
-        self.strategy_list = list()
-
-        # 是否要动态重载策略
-        self.is_watch_strategy = False
         # 修改时间缓存
         self._cache = {}
-        # # 文件进程映射
-        # self._process_map = {}
         # 文件模块映射
         self._modules = {}
         self._names = None
-        # 加载锁
-        self.lock = Lock()
-        # 加载线程
-        self._watch_thread = Thread(target=self._load_strategy, name="MainEngine.watch_reload_strategy")
 
         # shutdown 函数
         self.before_shutdown = []  # 关闭引擎前的 shutdown
@@ -98,6 +86,10 @@ class MainEngine:
             # 捕获退出信号后的要调用的,唯一的 shutdown 接口
             signal.signal(s, self._shutdown)
 
+        self.strategy_list = []
+        for strategy in strategy_list:
+            self.strategy_list.append(strategy(self.user,self.log,self))
+            
         self.log.info('启动主引擎')
 
     def start(self):
@@ -114,49 +106,6 @@ class MainEngine:
 
         self.clock_engine.start()
         self._add_main_shutdown(self.clock_engine.stop)
-
-    def load(self, names, strategy_file):
-        with self.lock:
-            mtime = os.path.getmtime(os.path.join('strategies', strategy_file))
-
-            # 是否需要重新加载
-            reload = False
-
-            strategy_module_name = os.path.basename(strategy_file)[:-3]
-            new_module = lambda strategy_module_name: importlib.import_module('.' + strategy_module_name, 'strategies')
-            strategy_module = self._modules.get(
-                strategy_file,  # 从缓存中获取 module 实例
-                new_module(strategy_module_name)  # 创建新的 module 实例
-            )
-
-            if self._cache.get(strategy_file, None) == mtime:
-                # 检查最后改动时间
-                return
-            elif self._cache.get(strategy_file, None) is not None:
-                # 注销策略的监听
-                old_strategy = self.get_strategy(strategy_module.Strategy.name)
-                if old_strategy is None:
-                    for s in self.strategy_list:
-                        print(s.name)
-                self.log.warn(u'卸载策略: %s' % old_strategy.name)
-                self.strategy_listen_event(old_strategy, "unlisten")
-                time.sleep(2)
-                reload = True
-            # 重新加载
-            if reload:
-                strategy_module = importlib.reload(strategy_module)
-
-            self._modules[strategy_file] = strategy_module
-
-            strategy_class = getattr(strategy_module, 'Strategy')
-            if names is None or strategy_class.name in names:
-                self.strategies[strategy_module_name] = strategy_class
-                # 缓存加载信息
-                new_strategy = strategy_class(user=self.user, log_handler=self.log, main_engine=self)
-                self.strategy_list.append(new_strategy)
-                self._cache[strategy_file] = mtime
-                self.strategy_listen_event(new_strategy, "listen")
-                self.log.info(u'加载策略: %s' % strategy_module_name)
 
     def strategy_listen_event(self, strategy, _type="listen"):
         """
@@ -176,29 +125,6 @@ class MainEngine:
 
         # 时钟事件
         func(ClockEngine.EventType, strategy.clock)
-
-    def load_strategy(self, names=None):
-        """动态加载策略
-        :param names: 策略名列表，元素为策略的 name 属性"""
-        s_folder = 'strategies'
-        self._names = names
-        strategies = os.listdir(s_folder)
-        strategies = filter(lambda file: file.endswith('.py') and file != '__init__.py', strategies)
-        importlib.import_module(s_folder)
-        for strategy_file in strategies:
-            self.load(self._names, strategy_file)
-        # 如果线程没有启动，就启动策略监视线程
-        if self.is_watch_strategy and not self._watch_thread.is_alive():
-            self.log.warn("启用了动态加载策略功能")
-            self._watch_thread.start()
-
-    def _load_strategy(self):
-        while True:
-            try:
-                self.load_strategy(self._names)
-                time.sleep(2)
-            except Exception as e:
-                print(e)
 
     def get_strategy(self, name):
         for strategy in self.strategy_list:

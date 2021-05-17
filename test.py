@@ -5,6 +5,9 @@ from easyquant import DefaultQuotationEngine, DefaultLogHandler, PushBaseEngine
 from easyquant import RedisIo
 from custom.fixeddataengine import FixedDataEngine
 from custom.fixedmainengine import FixedMainEngine
+from strategies.open_strategy import OpenStrategy
+from strategies.save import SaveStrategy
+
 
 #choose = input('1: 华泰 2: 佣金宝 3: 银河 4: 雪球模拟组合 5: 广发\n:')
 choose = '4'
@@ -39,7 +42,5 @@ log_filepath = './logs'
 
 log_handler = DefaultLogHandler(name='测试', log_type=log_type, filepath=log_filepath)
 
-m = FixedMainEngine(broker, need_data, quotation_engines=[quotation_engine], log_handler=log_handler,ext_stocks=["sz000002","sh600338","sz002230","sh601669","sz000002","sz000625","sh600635","sh601229","sz000799","sh600380",'sh603778','sh600531','sh601949','sh600085','sz000650','sz002626','sh000001','sz399001'])
-m.is_watch_strategy = True  # 策略文件出现改动时,自动重载,不建议在生产环境下使用
-m.load_strategy()
+m = FixedMainEngine(broker,[OpenStrategy] ,need_data, quotation_engines=[quotation_engine], log_handler=log_handler,ext_stocks=["sz000002","sh600338","sz002230","sh601669","sz000002","sz000625","sh600635","sh601229","sz000799","sh600380",'sh603778','sh600531','sh601949','sh600085','sz000650','sz002626','sh000001','sz399001'])
 m.start()

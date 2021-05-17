@@ -6,7 +6,7 @@ from easyquant import DefaultLogHandler
 from easyquant import StrategyTemplate
 import numpy as np
 import os
-class Strategy(StrategyTemplate):
+class SaveStrategy(StrategyTemplate):
     name = 'save'
     
     def init(self):
@@ -14,7 +14,7 @@ class Strategy(StrategyTemplate):
         self.dir = './data/{}'.format(t)
         if not os.path.exists(self.dir):
             os.mkdir(self.dir)
-        self.clock_engine.register_interval(1.5, trading=False)
+        self.clock_engine.register_interval(10, trading=False)
         self.quotation_dict = {}
 
     def strategy(self, event):
@@ -39,7 +39,7 @@ class Strategy(StrategyTemplate):
                     self.quotation_dict[code] = np.vstack((np_list,np.array(arr)))
 
     def clock(self, event):
-        if event.data.clock_event == 1.5:
+        if event.data.clock_event == 10:
             for k,v in self.quotation_dict.items():
                 np.save(os.path.join(self.dir,k),v)
 

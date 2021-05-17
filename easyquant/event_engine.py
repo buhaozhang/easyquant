@@ -32,7 +32,7 @@ class EventEngine:
         """启动引擎"""
         while self.__active:
             try:
-                event = self.__queue.get(block=True, timeout=1)
+                event = self.__queue.get(block=True, timeout=5)
                 handle_thread = Thread(target=self.__process, name="EventEngine.__process", args=(event,))
                 handle_thread.start()
             except Empty:

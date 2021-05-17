@@ -1,9 +1,8 @@
 # coding:utf8
 import abc
 import json
-import multiprocessing.pool
 import warnings
-
+from concurrent.futures import ThreadPoolExecutor
 import requests
 
 from . import helpers
@@ -26,6 +25,7 @@ class BaseQuotation(metaclass=abc.ABCMeta):
         self._session = requests.session()
         stock_codes = self.load_stock_codes()
         self.stock_list = self.gen_stock_list(stock_codes)
+        self.pool = ThreadPoolExecutor(max_workers=32)
 
     def gen_stock_list(self, stock_codes):
         stock_with_exchange_list = self._gen_stock_prefix(stock_codes)
@@ -49,8 +49,7 @@ class BaseQuotation(metaclass=abc.ABCMeta):
 
     @staticmethod
     def load_stock_codes():
-        with open(helpers.STOCK_CODE_PATH) as f:
-            return json.load(f)["stock"]
+        return helpers.get_stock_codes(True)
 
     @property
     def all(self):
@@ -108,11 +107,10 @@ class BaseQuotation(metaclass=abc.ABCMeta):
 
     def _fetch_stock_data(self, stock_list):
         """获取股票信息"""
-        pool = multiprocessing.pool.ThreadPool(len(stock_list))
         try:
-            res = pool.map(self.get_stocks_by_range, stock_list)
-        finally:
-            pool.close()
+            res = self.pool.map(self.get_stocks_by_range, stock_list)
+        except Exception as e:
+            print(e)
         return [d for d in res if d is not None]
 
     def format_response_data(self, rep_data, **kwargs):

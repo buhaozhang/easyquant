@@ -3,39 +3,102 @@
 #
 __author__ = 'keping.chu'
 
-import multiprocessing as mp
+from numpy.lib.function_base import quantile
+from easytrader.xqtrader import XueQiuTrader
 from threading import Thread
-
+import queue
 import aiohttp
 import easyquotation
+from .stock import Stock
 
-import time
+import time,datetime
 from easyquant import PushBaseEngine
 from easyquant.event_engine import Event
 import numpy as np
 import os
 from datetime import date
+from queue import Queue, Empty
+from dateutil import tz
 
 class FixedDataEngine(PushBaseEngine):
     EventType = 'custom'
-    PushInterval = 15
+    PushInterval = 1
     BacktestEventType = 'backtest'
     Backtest = False
+    Endurance = True
 
     def __init__(self, event_engine, clock_engine, watch_stocks=None, s='sina'):
+        
         self.watch_stocks = watch_stocks
         self.s = s
         self.source = None
-        self.__queue = mp.Queue(1000)
+        self.__queue = queue.Queue()
         self.is_pause = not clock_engine.is_tradetime_now()
-        self._control_thread = Thread(
-            target=self._process_control, name="FixedDataEngine._control_thread")
-        self._control_thread.start()
+        
         self.quotation_list = []
         self.stock_dick = {}
+        super(FixedDataEngine, self).__init__(event_engine, clock_engine)
+        # self.read_stocks()
+        self.__thread = Thread(target=self.__deal_quotation, name="FixedDataEngine.__deal_thread")
+        
         if self.Backtest:
             self._init_backtest()
-        super(FixedDataEngine, self).__init__(event_engine, clock_engine)
+        if self.Endurance:
+            clock_engine.register_interval(18, False, self.save_stocks)
+
+        self.clock_engine.register_moment('t1', datetime.time(9, 10, 0,tzinfo=tz.tzlocal()), makeup=False,call=self.clear)
+        self.clock_engine.register_moment('t2', datetime.time(9, 11, 0,tzinfo=tz.tzlocal()), makeup=False,call=self.clear)
+        self.clock_engine.register_moment('t2', datetime.time(20, 58, 0,tzinfo=tz.tzlocal()), makeup=False,call=self.clear)
+
+    def clear(self):
+        self.__queue.put(None)
+
+    def start(self):
+        super(FixedDataEngine, self).start()
+        self.__thread.start()
+
+    def read_stock(self, code):
+        return Stock.read(code)
+
+    def read_stocks(self):
+        dir_files = []
+        t = date.today().isoformat()
+        filedir = './data/{}'.format(t)
+        for root, dirs, files in os.walk(filedir):
+            if root == filedir:
+                for file in files:
+                    dir_files.append(os.path.join(root, file))
+        # self.read_stock(dir_files[0])
+        res = self.source.pool.map(self.read_stock,dir_files)
+        
+
+    def deal_quotation(self,quotations):
+        for code, quotation in quotations.items():
+            stock = self.stock_dick.get(code, None)
+            if stock is None:
+                self.stock_dick[code] = Stock(code, quotation)
+            else:
+                stock.push_quotation(quotation)
+        event = Event(event_type=self.EventType, data=(self.stock_dick,quotations))
+        self.event_engine.put(event)
+
+    def __deal_quotation(self):
+        while self.is_active:
+            try:
+                quotations = self.__queue.get(block=True, timeout=5)
+                if quotations is None:
+                    self.stock_dick = {}
+                else:
+                    self.deal_quotation(quotations)
+            except Empty:
+                pass
+        
+
+    def save_stock(self, stock):
+        stock.save()
+
+    def save_stocks(self):
+        res = self.source.pool.map(self.save_stock,self.stock_dick.values() )
 
     def _init_backtest(self):
         dir_files = []
@@ -51,7 +114,7 @@ class FixedDataEngine(PushBaseEngine):
             code = os.path.basename(p).split('.')[0]
             np_list2 = np.load(p)
             self.stock_dick[code] = np_list2
-            # i = 0  
+            # i = 0
             # for np_list in np_list2:
             #     if len(self.quotation_list) <= i:
             #         self.quotation_list.append({})
@@ -74,7 +137,6 @@ class FixedDataEngine(PushBaseEngine):
             #     event_data[code] = t
             #     i += 1
         # print(self.quotation_list)
-
 
     def _process_control(self):
 
@@ -100,12 +162,15 @@ class FixedDataEngine(PushBaseEngine):
 
     def fetch_quotation(self):
         # 返回行情
-        # return self.source.stocks(self.watch_stocks, True)
-        return self.source.all_market
+        if self.Endurance:
+            return self.source.all_market
+        else:
+            return self.source.stocks(self.watch_stocks, True)
 
     def push_quotation(self):
-        if self.Backtest:                     
-            event = Event(event_type=self.BacktestEventType, data=(self.stock_dick))
+        if self.Backtest:
+            event = Event(event_type=self.BacktestEventType,
+                          data=(self.stock_dick))
             self.event_engine.put(event)
             return
 
@@ -115,10 +180,11 @@ class FixedDataEngine(PushBaseEngine):
             #     continue
             try:
                 response_data = self.fetch_quotation()
-            except aiohttp.errors.ServerDisconnectedError:
+            except Exception as e:
+                print(e)
                 time.sleep(self.PushInterval)
                 continue
-
-            event = Event(event_type=self.EventType, data=response_data)
-            self.event_engine.put(event)
+            print(time.time())
+            print(len(response_data))
+            self.__queue.put(response_data)
             time.sleep(self.PushInterval)
