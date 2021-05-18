@@ -81,7 +81,8 @@ class Stock:
 
     def save(self):
         with self.lock:
-            dir = './data/{}'.format(self.date)
+            dir = os.path.join('data',format(self.date))
+            # dir = './data/{}'.format(self.date)
             if not os.path.exists(dir):
                 os.mkdir(dir)
             np.array(self.kline)

@@ -44,11 +44,11 @@ class FixedDataEngine(PushBaseEngine):
         if self.Backtest:
             self._init_backtest()
         if self.Endurance:
-            clock_engine.register_interval(18, False, self.save_stocks)
+            clock_engine.register_interval(0.4, False, self.save_stocks)
 
         self.clock_engine.register_moment('t1', datetime.time(9, 10, 0,tzinfo=tz.tzlocal()), makeup=False,call=self.clear)
-        self.clock_engine.register_moment('t2', datetime.time(9, 11, 0,tzinfo=tz.tzlocal()), makeup=False,call=self.clear)
-        self.clock_engine.register_moment('t2', datetime.time(20, 58, 0,tzinfo=tz.tzlocal()), makeup=False,call=self.clear)
+        self.clock_engine.register_moment('t2', datetime.time(12, 0, 0,tzinfo=tz.tzlocal()), makeup=False,call=self.save_stocks)
+        self.clock_engine.register_moment('t3', datetime.time(15, 5, 0,tzinfo=tz.tzlocal()), makeup=False,call=self.save_stocks)
 
     def clear(self):
         self.__queue.put(None)
@@ -63,7 +63,7 @@ class FixedDataEngine(PushBaseEngine):
     def read_stocks(self):
         dir_files = []
         t = date.today().isoformat()
-        filedir = './data/{}'.format(t)
+        filedir = os.path.join('data',format(t))
         for root, dirs, files in os.walk(filedir):
             if root == filedir:
                 for file in files:
@@ -98,12 +98,12 @@ class FixedDataEngine(PushBaseEngine):
         stock.save()
 
     def save_stocks(self):
-        res = self.source.pool.map(self.save_stock,self.stock_dick.values() )
+        res = self.source.pool.map(self.save_stock,self.stock_dick.values())
 
     def _init_backtest(self):
         dir_files = []
         t = date.today().isoformat()
-        filedir = './data/{}'.format(t)
+        filedir = os.path.join('data',format(t))
         for root, dirs, files in os.walk(filedir):
             if root == filedir:
                 for file in files:
