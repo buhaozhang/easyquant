@@ -43,12 +43,14 @@ class FixedDataEngine(PushBaseEngine):
         
         if self.Backtest:
             self._init_backtest()
-        if self.Endurance:
-            clock_engine.register_interval(0.4, False, self.save_stocks)
+        # if self.Endurance:
+        #     clock_engine.register_interval(0.4, False, self.save_stocks)
 
         self.clock_engine.register_moment('t1', datetime.time(9, 10, 0,tzinfo=tz.tzlocal()), makeup=False,call=self.clear)
         self.clock_engine.register_moment('t2', datetime.time(12, 0, 0,tzinfo=tz.tzlocal()), makeup=False,call=self.save_stocks)
         self.clock_engine.register_moment('t3', datetime.time(15, 5, 0,tzinfo=tz.tzlocal()), makeup=False,call=self.save_stocks)
+        self.clock_engine.register_moment('t4', datetime.time(15, 4, 0,tzinfo=tz.tzlocal()), makeup=True,call=self.pause)
+        self.clock_engine.register_moment('t5', datetime.time(9, 11, 0,tzinfo=tz.tzlocal()), makeup=False,call=self.work)
 
     def clear(self):
         self.__queue.put(None)
@@ -138,23 +140,13 @@ class FixedDataEngine(PushBaseEngine):
             #     i += 1
         # print(self.quotation_list)
 
-    def _process_control(self):
-
-        while True:
-            try:
-                msg = self.__queue.get(block=True)
-                if msg == "pause":
-                    self.is_pause = True
-                else:
-                    self.is_pause = False
-            except:
-                pass
-
     def pause(self):
-        self.__queue.put("pause")
+        print("pause")
+        self.is_pause = True
 
     def work(self):
-        self.__queue.put("work")
+        print("work")
+        self.is_pause = False
 
     def init(self):
         # 进行相关的初始化操作
@@ -175,9 +167,9 @@ class FixedDataEngine(PushBaseEngine):
             return
 
         while self.is_active:
-            # if self.is_pause:
-            #     time.sleep(1)
-            #     continue
+            if self.is_pause:
+                time.sleep(1)
+                continue
             try:
                 response_data = self.fetch_quotation()
             except Exception as e:

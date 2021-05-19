@@ -53,6 +53,9 @@ class Stock:
                 quotation['ask4_volume'] + quotation['ask5_volume']
             wb = (bid_sum - ask_sum) / (bid_sum +
                                         ask_sum) if bid_sum + ask_sum > 0 else 0
+            if len(quotation['time']) < 5:
+                print('time err')
+                return
             cur_q = [
                 quotation['now'],
                 quotation['buy'],
