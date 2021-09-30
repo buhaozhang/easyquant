@@ -33,7 +33,7 @@ class FixedDataEngine(PushBaseEngine):
         self.s = s
         self.source = None
         self.__queue = queue.Queue()
-        self.is_pause = not clock_engine.is_tradetime_now()
+        self.is_pause = False
         
         self.quotation_list = []
         self.stock_dick = {}
@@ -51,6 +51,8 @@ class FixedDataEngine(PushBaseEngine):
         self.clock_engine.register_moment('t3', datetime.time(15, 5, 0,tzinfo=tz.tzlocal()), makeup=False,call=self.save_stocks)
         self.clock_engine.register_moment('t4', datetime.time(15, 4, 0,tzinfo=tz.tzlocal()), makeup=True,call=self.pause)
         self.clock_engine.register_moment('t5', datetime.time(9, 11, 0,tzinfo=tz.tzlocal()), makeup=False,call=self.work)
+        self.clock_engine.register_moment('t6', datetime.time(9, 15, 0,tzinfo=tz.tzlocal()), makeup=False,call=self.work)
+        self.clock_engine.register_moment('t7', datetime.time(9, 29, 0,tzinfo=tz.tzlocal()), makeup=False,call=self.work)
 
     def clear(self):
         self.__queue.put(None)

@@ -42,5 +42,5 @@ log_filepath = './logs'
 
 log_handler = DefaultLogHandler(name='测试', log_type=log_type, filepath=log_filepath)
 
-m = FixedMainEngine(broker,[OpenStrategy] ,need_data, quotation_engines=[quotation_engine], log_handler=log_handler,ext_stocks=["sz000002","sh600338","sz002230","sh601669","sz000002","sz000625","sh600635","sh601229","sz000799","sh600380",'sh603778','sh600531','sh601949','sh600085','sz000650','sz002626','sh000001','sz399001'])
+m = FixedMainEngine(None ,[OpenStrategy] ,None, quotation_engines=[quotation_engine], log_handler=log_handler,ext_stocks=["sz000002","sh600338","sz002230","sh601669","sz000002","sz000625","sh600635","sh601229","sz000799","sh600380",'sh603778','sh600531','sh601949','sh600085','sz000650','sz002626','sh000001','sz399001'])
 m.start()

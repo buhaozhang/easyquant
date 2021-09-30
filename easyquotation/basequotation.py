@@ -96,9 +96,11 @@ class BaseQuotation(metaclass=abc.ABCMeta):
                 "Safari/537.36"
             ),
         }
-
-        r = self._session.get(self.stock_api + params, headers=headers)
-        return r.text
+        try:
+            r = self._session.get(self.stock_api + params, headers=headers,timeout=5)
+            return r.text
+        except Exception as e:
+            return None
 
     def get_stock_data(self, stock_list, **kwargs):
         """获取并格式化股票信息"""

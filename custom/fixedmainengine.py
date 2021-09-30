@@ -29,10 +29,8 @@ class FixedMainEngine(MainEngine):
         self._names = None
         # 加载锁
         self.lock = Lock()
-        positions = [p['stock_code'] for p in self.user.position]
-        positions.extend(ext_stocks)
         for quotation_engine in quotation_engines:
-            self.quotation_engines.append(quotation_engine(self.event_engine, self.clock_engine, positions))
+            self.quotation_engines.append(quotation_engine(self.event_engine, self.clock_engine, ext_stocks))
         for strategy in self.strategy_list:
             self.bind_event(strategy)
 
